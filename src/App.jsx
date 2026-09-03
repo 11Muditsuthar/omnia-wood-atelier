@@ -59,26 +59,49 @@ export default function App() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 py-40 md:py-56 border-b border-zinc-900 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-zinc-800/20 via-zinc-950 to-zinc-950">
-        <p className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-zinc-400 mb-8">
-          Architectural Millwork & Master Carpentry
-        </p>
-        <h1 className="text-5xl md:text-8xl font-extralight tracking-tighter max-w-5xl text-zinc-100 leading-[1.1]">
-          Global Standards. <br />
-          <span className="font-light text-zinc-400">Master Craftsmanship.</span>
-        </h1>
+      <section className="relative flex flex-col items-center justify-center text-center px-6 min-h-[95vh] border-b border-zinc-900 overflow-hidden">
         
-        <div className="flex flex-col sm:flex-row gap-6 mt-16 w-full sm:w-auto">
-          <a href="#portfolio" className="w-full sm:w-auto">
-            <button className="w-full bg-zinc-100 text-zinc-950 px-10 py-4 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-300 transition-colors duration-300">
-              Explore Portfolio
-            </button>
-          </a>
-          <a href="#inquire" className="w-full sm:w-auto">
-            <button className="w-full border border-zinc-700 text-zinc-300 px-10 py-4 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-900 hover:border-zinc-500 transition-all duration-300">
-              Initiate Project
-            </button>
-          </a>
+        {/* Animated Background Layer */}
+        <div className="absolute inset-0 z-0 bg-zinc-950 flex items-center justify-center">
+          {/* Wood Texture Base */}
+          <img 
+            src="https://images.unsplash.com/photo-1583416750470-965b2707b355?auto=format&fit=crop&q=80&w=2000" 
+            alt="Master Carpentry Woodwork" 
+            className="absolute inset-0 w-full h-full object-cover opacity-15 hero-pan mix-blend-luminosity"
+          />
+          
+          {/* Animated Architectural Grid */}
+          <div className="absolute inset-0 bg-blueprint-grid animate-blueprint z-10"></div>
+          
+          {/* Cinematic Spotlight Overlay (Darkens edges, highlights center) */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_var(--tw-gradient-stops))] from-transparent via-zinc-950/80 to-zinc-950 z-20"></div>
+        </div>
+
+        {/* Content Layer */}
+        <div className="relative z-30 flex flex-col items-center w-full mt-[-80px]">
+          <p className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-zinc-400 mb-8 opacity-0 hero-fade-up">
+            Architectural Millwork & Master Carpentry
+          </p>
+          
+          <h1 className="text-5xl md:text-8xl font-extralight tracking-tighter max-w-5xl text-zinc-100 leading-[1.1] opacity-0 hero-fade-up hero-delay-1">
+            Global Standards. <br />
+            <span className="font-normal text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 via-zinc-100 to-zinc-500 hero-shine">
+              Master Craftsmanship.
+            </span>
+          </h1>
+          
+          <div className="flex flex-col sm:flex-row gap-6 mt-16 w-full sm:w-auto opacity-0 hero-fade-up hero-delay-2 justify-center">
+            <a href="#portfolio" className="w-full sm:w-auto">
+              <button className="w-full bg-zinc-100 text-zinc-950 px-10 py-4 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-300 transition-colors duration-300">
+                Explore Portfolio
+              </button>
+            </a>
+            <a href="#inquire" className="w-full sm:w-auto">
+              <button className="w-full border border-zinc-700 text-zinc-300 px-10 py-4 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-900 hover:border-zinc-500 transition-all duration-300">
+                Initiate Project
+              </button>
+            </a>
+          </div>
         </div>
       </section>
 
@@ -211,7 +234,7 @@ export default function App() {
           <a href="#" className="hover:text-zinc-100 transition-colors">Instagram</a>
           <a href="mailto:muditsuthar@gmail.com" className="hover:text-zinc-100 transition-colors">Email Us</a>
         </div>
-        <p className="text-zinc-600 text-[10px] tracking-[0.2em] uppercase">© {new Date().getFullYear()} Mudit kulariya. All rights reserved.</p>
+        <p className="text-zinc-600 text-[10px] tracking-[0.2em] uppercase">© {new Date().getFullYear()} Mudit Suthar. All rights reserved.</p>
       </footer>
     </div>
   );
