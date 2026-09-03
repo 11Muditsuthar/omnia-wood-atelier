@@ -65,7 +65,7 @@ export default function App() {
         <div className="absolute inset-0 z-0 bg-zinc-950 flex items-center justify-center">
           {/* Wood Texture Base */}
           <img 
-            src="https://images.unsplash.com/photo-1583416750470-965b2707b355?auto=format&fit=crop&q=80&w=2000" 
+            src="https://static.vecteezy.com/system/resources/thumbnails/066/559/751/small/craftsman-workspace-filled-with-tools-and-wooden-materials-in-an-artisan-workshop-during-daylight-hours-photo.jpg" 
             alt="Master Carpentry Woodwork" 
             className="absolute inset-0 w-full h-full object-cover opacity-15 hero-pan mix-blend-luminosity"
           />
@@ -232,7 +232,7 @@ export default function App() {
         <span className="text-xl font-light tracking-[0.3em] uppercase text-zinc-100 mb-6">Omnia</span>
         <div className="flex space-x-8 mb-8 text-[10px] tracking-[0.2em] uppercase text-zinc-400">
           <a href="#" className="hover:text-zinc-100 transition-colors">Instagram</a>
-          <a href="mailto:muditsuthar@gmail.com" className="hover:text-zinc-100 transition-colors">Email Us</a>
+          <a href="https://mail.google.com/mail/?view=cm&fs=1&to=muditsuthar@gmail.com" target="_blank" rel="noreferrer" className="hover:text-zinc-100 transition-colors">Email Us</a>
         </div>
         <p className="text-zinc-600 text-[10px] tracking-[0.2em] uppercase">© {new Date().getFullYear()} Mudit Suthar. All rights reserved.</p>
       </footer>
