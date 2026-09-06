@@ -1,241 +1,124 @@
-import React, { useState } from 'react';
-import { supabase } from './supabase';
-import './App.css'; 
+import { useEffect, useRef, useState } from 'react';
+import './App.css';
+
+const projects = [
+  { number: '01', title: 'The Quiet House', type: 'Private Residence · Jaipur', image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=90&w=1800', className: 'project--wide' },
+  { number: '02', title: 'Monumental Kitchen', type: 'Private Residence · Udaipur', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=90&w=1600', className: 'project--tall' },
+  { number: '03', title: 'Chamber of Oak', type: 'Private Residence · Delhi', image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&q=90&w=1600', className: 'project--tall project--offset' },
+];
+
+const process = [
+  ['01', 'Listen', 'Every considered detail begins with a conversation about how a space should feel.'],
+  ['02', 'Resolve', 'Drawings become finely-tuned proportions, material studies, and construction logic.'],
+  ['03', 'Make', 'Our workshop translates precision into warmth—one surface, joint, and edge at a time.'],
+  ['04', 'Settle', 'We install with quiet exactitude, until every piece belongs to the architecture.'],
+];
+
+function Arrow({ diagonal = false }) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className={diagonal ? 'icon icon--diagonal' : 'icon'}><path d="M4 12h15M14 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.25" /></svg>;
+}
+
+function Mark() {
+  return <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>;
+}
 
 export default function App() {
-  const [inquiry, setInquiry] = useState({ fullName: '', projectDetails: '' });
+  const [inquiry, setInquiry] = useState({ fullName: '', email: '', phone: '', projectType: '', location: '', budget: '', timeline: '', projectDetails: '', website: '' });
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const appRef = useRef(null);
+  const inquiryStartedAt = useRef(0);
+
+  useEffect(() => {
+    inquiryStartedAt.current = Date.now();
+    const revealObserver = new IntersectionObserver((entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add('is-visible')), { threshold: 0.12 });
+    const targets = document.querySelectorAll('[data-reveal]');
+    targets.forEach((target) => revealObserver.observe(target));
+    const onScroll = () => document.documentElement.style.setProperty('--scroll-y', `${window.scrollY}px`);
+    const onPointerMove = (event) => {
+      document.documentElement.style.setProperty('--pointer-x', `${(event.clientX / window.innerWidth) * 100}%`);
+      document.documentElement.style.setProperty('--pointer-y', `${(event.clientY / window.innerHeight) * 100}%`);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    return () => { revealObserver.disconnect(); window.removeEventListener('scroll', onScroll); window.removeEventListener('pointermove', onPointerMove); };
+  }, []);
 
   const handleInquirySubmit = async (event) => {
     event.preventDefault();
     const fullName = inquiry.fullName.trim();
+    const email = inquiry.email.trim();
+    const phone = inquiry.phone.trim();
     const projectDetails = inquiry.projectDetails.trim();
-
-    if (!fullName || !projectDetails) {
-      setSubmissionState({ status: 'error', message: 'Please complete both fields.' });
-      return;
-    }
-
+    if (!fullName || !email || !phone || !projectDetails) { setSubmissionState({ status: 'error', message: 'Please complete the required fields.' }); return; }
     setSubmissionState({ status: 'submitting', message: '' });
-
-    const { error } = await supabase.from('client_inquiries').insert({
-      name: fullName,
-      project_details: projectDetails,
-    });
-
-    if (error) {
-      setSubmissionState({ status: 'error', message: 'Submission failed. Try again.' });
+    try {
+      const response = await fetch('https://formsubmit.co/ajax/muditsuthar@gmail.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          phone,
+          project_type: inquiry.projectType,
+          project_location: inquiry.location,
+          indicative_budget: inquiry.budget,
+          ideal_timeline: inquiry.timeline,
+          project_details: projectDetails,
+          _subject: `New Omnia enquiry — ${fullName}`,
+          _template: 'table',
+          _replyto: email,
+          _honey: inquiry.website,
+          _captcha: 'true',
+          submitted_after_ms: Date.now() - inquiryStartedAt.current,
+        }),
+      });
+      if (!response.ok) throw new Error('Email delivery failed');
+    } catch {
+      setSubmissionState({ status: 'error', message: 'We could not send your inquiry. Please try again or email us directly.' });
       return;
     }
-
-    setInquiry({ fullName: '', projectDetails: '' });
-    setSubmissionState({ status: 'success', message: 'Inquiry submitted successfully.' });
+    setInquiry({ fullName: '', email: '', phone: '', projectType: '', location: '', budget: '', timeline: '', projectDetails: '', website: '' });
+    inquiryStartedAt.current = Date.now();
+    setSubmissionState({ status: 'success', message: 'Thank you — your enquiry has been sent. We’ll be in touch shortly.' });
   };
+  const closeMenu = () => setMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-zinc-700 selection:text-white">
-      {/* Top Navigation */}
-      <nav className="flex items-center justify-between px-6 md:px-12 py-6 border-b border-zinc-800/50 backdrop-blur-xl sticky top-0 z-50 bg-zinc-950/70">
-        <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-          <span className="text-xl md:text-2xl font-light tracking-[0.3em] uppercase text-zinc-100">
-            Omnia
-          </span>
-          <span className="text-[10px] md:text-xs tracking-widest text-zinc-500 uppercase mt-1 md:mt-0">
-            Wood Atelier
-          </span>
-        </div>
-        <div className="hidden lg:flex items-center space-x-10 text-[11px] tracking-[0.2em] uppercase text-zinc-400">
-          <a href="#portfolio" className="hover:text-zinc-100 transition-colors duration-300">Portfolio</a>
-          <a href="#philosophy" className="hover:text-zinc-100 transition-colors duration-300">Philosophy</a>
-          <a href="#inquire" className="hover:text-zinc-100 transition-colors duration-300">Start Project</a>
-        </div>
-        <div className="hidden md:block">
-          <a href="#inquire">
-            <button className="text-[11px] uppercase tracking-[0.2em] border border-zinc-700 px-6 py-3 hover:bg-zinc-100 hover:text-zinc-950 transition-all duration-300">
-              Inquire
-            </button>
-          </a>
-        </div>
-      </nav>
+    <main ref={appRef} className="site-shell">
+      <div className="film-grain" aria-hidden="true" />
+      <header className="site-header">
+        <a href="#top" className="brand" onClick={closeMenu} aria-label="Omnia Wood Atelier home"><Mark /><span className="brand-name">Omnia</span><span className="brand-subtitle">Wood Atelier</span></a>
+        <nav className={`desktop-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Primary navigation">
+          <a href="#work" onClick={closeMenu}><span>01</span> Work</a><a href="#atelier" onClick={closeMenu}><span>02</span> Atelier</a><a href="#process" onClick={closeMenu}><span>03</span> Process</a>
+        </nav>
+        <a href="#inquire" className="header-cta"><span>Start a project</span><Arrow /></a>
+        <button className={`menu-toggle ${menuOpen ? 'is-open' : ''}`} onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation" aria-expanded={menuOpen}><i /><i /></button>
+      </header>
 
-      {/* Hero Section */}
-      <section className="relative flex flex-col items-center justify-center text-center px-6 min-h-[95vh] border-b border-zinc-900 overflow-hidden">
-        
-        {/* Animated Background Layer */}
-        <div className="absolute inset-0 z-0 bg-zinc-950 flex items-center justify-center">
-          {/* Wood Texture Base */}
-          <img 
-            src="https://static.vecteezy.com/system/resources/thumbnails/066/559/751/small/craftsman-workspace-filled-with-tools-and-wooden-materials-in-an-artisan-workshop-during-daylight-hours-photo.jpg" 
-            alt="Master Carpentry Woodwork" 
-            className="absolute inset-0 w-full h-full object-cover opacity-15 hero-pan mix-blend-luminosity"
-          />
-          
-          {/* Animated Architectural Grid */}
-          <div className="absolute inset-0 bg-blueprint-grid animate-blueprint z-10"></div>
-          
-          {/* Cinematic Spotlight Overlay (Darkens edges, highlights center) */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_var(--tw-gradient-stops))] from-transparent via-zinc-950/80 to-zinc-950 z-20"></div>
-        </div>
-
-        {/* Content Layer */}
-        <div className="relative z-30 flex flex-col items-center w-full mt-[-80px]">
-          <p className="text-[10px] md:text-xs tracking-[0.4em] uppercase text-zinc-400 mb-8 opacity-0 hero-fade-up">
-            Architectural Millwork & Master Carpentry
-          </p>
-          
-          <h1 className="text-5xl md:text-8xl font-extralight tracking-tighter max-w-5xl text-zinc-100 leading-[1.1] opacity-0 hero-fade-up hero-delay-1">
-            Global Standards. <br />
-            <span className="font-normal text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 via-zinc-100 to-zinc-500 hero-shine">
-              Master Craftsmanship.
-            </span>
-          </h1>
-          
-          <div className="flex flex-col sm:flex-row gap-6 mt-16 w-full sm:w-auto opacity-0 hero-fade-up hero-delay-2 justify-center">
-            <a href="#portfolio" className="w-full sm:w-auto">
-              <button className="w-full bg-zinc-100 text-zinc-950 px-10 py-4 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-300 transition-colors duration-300">
-                Explore Portfolio
-              </button>
-            </a>
-            <a href="#inquire" className="w-full sm:w-auto">
-              <button className="w-full border border-zinc-700 text-zinc-300 px-10 py-4 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-900 hover:border-zinc-500 transition-all duration-300">
-                Initiate Project
-              </button>
-            </a>
-          </div>
-        </div>
+      <section className="hero" id="top">
+        <div className="hero-image" role="img" aria-label="Custom timber interior with handcrafted cabinetry" /><div className="hero-ambient" aria-hidden="true" /><div className="hero-orbit orbit-one" aria-hidden="true" /><div className="hero-orbit orbit-two" aria-hidden="true" />
+        <p className="hero-location reveal" data-reveal><span className="pulse-dot" /> India · Worldwide</p>
+        <div className="hero-copy"><p className="eyebrow hero-kicker reveal" data-reveal>Architectural millwork · master carpentry</p><h1 className="hero-title"><span className="reveal-line" data-reveal>Built for the</span><em className="reveal-line" data-reveal>way you live.</em></h1><div className="hero-bottom reveal" data-reveal><p>Rare materials, resolved with discipline.<br />Made for spaces that outlast trends.</p><a href="#work" className="circular-link" aria-label="Explore selected works"><Arrow diagonal /></a></div></div>
+        <div className="hero-side-note" aria-hidden="true"><span>Scroll to explore</span><i /></div><div className="hero-index" aria-hidden="true">( 01 — 05 )</div>
       </section>
 
-      {/* Philosophy & Heritage Statement */}
-      <section id="philosophy" className="px-6 md:px-12 py-24 md:py-32 max-w-6xl mx-auto border-b border-zinc-900 text-left">
-        <div className="max-w-3xl mb-16">
-          <h2 className="text-xl md:text-2xl font-light tracking-[0.3em] uppercase mb-6 text-zinc-100">Our Philosophy</h2>
-          <p className="text-zinc-400 text-sm md:text-base font-light leading-relaxed">
-            Omnia Wood Atelier was founded on a singular principle: uncompromising quality. We bridge the gap between traditional master carpentry and modern architectural demands, ensuring every piece of bespoke woodwork serves as a structural and visual anchor for the spaces it inhabits.
-          </p>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-12 md:gap-16">
-          <div>
-            <h3 className="text-[11px] tracking-[0.2em] uppercase text-zinc-300 mb-4 border-b border-zinc-800 pb-4">01. Heritage</h3>
-            <p className="text-sm text-zinc-500 leading-relaxed font-light mt-4">
-              Decades of raw hands-on woodcraft refined into a standardized, modern execution unit.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-[11px] tracking-[0.2em] uppercase text-zinc-300 mb-4 border-b border-zinc-800 pb-4">02. Precision</h3>
-            <p className="text-sm text-zinc-500 leading-relaxed font-light mt-4">
-              Engineered joinery, premium hardware integration, and museum-grade finishes.
-            </p>
-          </div>
-          <div>
-            <h3 className="text-[11px] tracking-[0.2em] uppercase text-zinc-300 mb-4 border-b border-zinc-800 pb-4">03. Scale</h3>
-            <p className="text-sm text-zinc-500 leading-relaxed font-light mt-4">
-              Structured teams ready to deploy on architect-led commercial and residential sites.
-            </p>
-          </div>
-        </div>
+      <section className="ticker" aria-label="Our specialties"><div className="ticker-track"><span>Bespoke cabinetry <b>✦</b> Architectural interiors <b>✦</b> Hand-finished timber <b>✦</b> Bespoke cabinetry <b>✦</b> Architectural interiors <b>✦</b> Hand-finished timber <b>✦</b></span></div></section>
+
+      <section className="intro section-pad" id="atelier">
+        <div className="section-meta reveal" data-reveal><span>( About Omnia )</span><span>01 — 04</span></div>
+        <div className="intro-grid"><div className="intro-visual reveal" data-reveal><div className="wood-block" aria-hidden="true"><span /><span /><span /><span /></div><p>Material Study<br />No. 03 — Walnut</p></div><div className="intro-copy"><p className="eyebrow reveal" data-reveal>More than a finish</p><h2 className="display-title reveal" data-reveal>We give timber<br /><em>its rightful weight.</em></h2><div className="intro-text reveal" data-reveal><p>Omnia is a studio for spaces with a point of view. We make quietly distinctive millwork for private homes, hospitality, and commercial interiors.</p><a className="text-link" href="#process">Inside the atelier <Arrow /></a></div></div></div>
       </section>
 
-      {/* Capabilities Section */}
-      <section className="py-24 px-6 max-w-6xl mx-auto border-b border-zinc-900">
-        <h2 className="text-xl md:text-2xl font-light tracking-[0.3em] uppercase mb-16 text-center text-zinc-100">Core Capabilities</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div className="p-6 bg-zinc-900/30 border border-zinc-800/50">
-            <p className="text-zinc-300 text-[10px] md:text-xs tracking-[0.2em] uppercase">Bespoke Cabinetry</p>
-          </div>
-          <div className="p-6 bg-zinc-900/30 border border-zinc-800/50">
-            <p className="text-zinc-300 text-[10px] md:text-xs tracking-[0.2em] uppercase">Architectural Doors</p>
-          </div>
-          <div className="p-6 bg-zinc-900/30 border border-zinc-800/50">
-            <p className="text-zinc-300 text-[10px] md:text-xs tracking-[0.2em] uppercase">Custom Libraries</p>
-          </div>
-          <div className="p-6 bg-zinc-900/30 border border-zinc-800/50">
-            <p className="text-zinc-300 text-[10px] md:text-xs tracking-[0.2em] uppercase">Commercial Fit-outs</p>
-          </div>
-        </div>
-      </section>
+      <section className="capabilities section-pad"><div className="section-meta reveal" data-reveal><span>( What we make )</span><span>02 — 04</span></div><div className="capability-list">{['Kitchens & cabinetry', 'Libraries & private studies', 'Doors & wall panelling', 'Hospitality & retail fit-outs'].map((item, index) => <div className="capability-row reveal" data-reveal key={item}><span>0{index + 1}</span><h3>{item}</h3><a href="#inquire" aria-label={`Enquire about ${item}`}><Arrow diagonal /></a></div>)}</div></section>
 
-      {/* Portfolio Section */}
-      <section id="portfolio" className="py-24 md:py-32 px-4 md:px-6 max-w-[1400px] mx-auto border-b border-zinc-900">
-        <h2 className="text-xl md:text-2xl font-light tracking-[0.3em] uppercase mb-16 text-center text-zinc-100">Selected Works</h2>
-        <div className="grid lg:grid-cols-2 gap-4 md:gap-8">
-          
-          <div className="group relative overflow-hidden bg-zinc-900 aspect-[2.35/1] border border-zinc-800/50">
-            <img 
-              src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&q=80&w=1600" 
-              alt="Bespoke Library" 
-              className="object-cover w-full h-full opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 translate-y-0 md:translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-              <p className="text-zinc-100 text-[10px] md:text-xs tracking-[0.2em] uppercase bg-zinc-950/90 px-4 py-2 border border-zinc-800/50 backdrop-blur-md">
-                Bespoke Library
-              </p>
-            </div>
-          </div>
+      <section id="work" className="work section-pad"><div className="work-heading"><div className="section-meta reveal" data-reveal><span>( Selected works )</span><span>03 — 04</span></div><h2 className="display-title reveal" data-reveal>Objects of <em>belonging.</em></h2><p className="reveal" data-reveal>A small selection of spaces shaped around craft, proportion, and the people who inhabit them.</p></div><div className="project-grid">{projects.map((project) => <article className={`project ${project.className} reveal`} data-reveal key={project.number}><div className="project-image-wrap"><img src={project.image} alt={project.title} /></div><div className="project-caption"><span>{project.number}</span><div><h3>{project.title}</h3><p>{project.type}</p></div><a href="#inquire" aria-label={`Enquire about ${project.title}`}><Arrow diagonal /></a></div></article>)}</div><a href="#inquire" className="view-all reveal" data-reveal><span>Discuss your project</span><Arrow /></a></section>
 
-          <div className="group relative overflow-hidden bg-zinc-900 aspect-[2.35/1] border border-zinc-800/50">
-            <img 
-              src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=1600" 
-              alt="Architectural Kitchen" 
-              className="object-cover w-full h-full opacity-60 group-hover:opacity-100 group-hover:scale-105 transition-all duration-1000 ease-out" 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
-            <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 translate-y-0 md:translate-y-4 group-hover:translate-y-0 transition-transform duration-700">
-              <p className="text-zinc-100 text-[10px] md:text-xs tracking-[0.2em] uppercase bg-zinc-950/90 px-4 py-2 border border-zinc-800/50 backdrop-blur-md">
-                Architectural Kitchen
-              </p>
-            </div>
-          </div>
+      <section id="process" className="process section-pad"><div className="process-image" aria-hidden="true" /><div className="process-overlay" /><div className="process-content"><div className="section-meta section-meta--light reveal" data-reveal><span>( The Omnia way )</span><span>04 — 04</span></div><h2 className="display-title display-title--light reveal" data-reveal>There is a<br /><em>right way</em> to make.</h2><div className="process-list">{process.map(([number, title, text]) => <div className="process-row reveal" data-reveal key={number}><span>{number}</span><h3>{title}</h3><p>{text}</p></div>)}</div></div></section>
 
-        </div>
-      </section>
-
-      {/* Client Inquiry Section */}
-      <section id="inquire" className="py-24 md:py-32 px-6 max-w-2xl mx-auto text-center mb-12">
-        <h2 className="text-xl md:text-2xl font-light tracking-[0.3em] uppercase mb-6 text-zinc-100">Initiate a Project</h2>
-        <p className="text-zinc-400 text-xs md:text-sm mb-12 font-light leading-relaxed">Partner with us for bespoke residential or commercial architectural millwork.</p>
-        <form className="flex flex-col gap-6 text-left" onSubmit={handleInquirySubmit}>
-          <input
-            type="text"
-            placeholder="Client or Firm Name"
-            value={inquiry.fullName}
-            onChange={(event) => setInquiry({ ...inquiry, fullName: event.target.value })}
-            required
-            className="bg-zinc-900/30 border border-zinc-800/80 p-5 text-sm text-zinc-100 outline-none focus:border-zinc-400 focus:bg-zinc-900/60 transition-all duration-300 placeholder:text-zinc-600"
-          />
-          <textarea
-            placeholder="Project Details (e.g., Kitchen Millwork, Commercial Fit-out)"
-            value={inquiry.projectDetails}
-            onChange={(event) => setInquiry({ ...inquiry, projectDetails: event.target.value })}
-            required
-            rows="4"
-            className="bg-zinc-900/30 border border-zinc-800/80 p-5 text-sm text-zinc-100 outline-none focus:border-zinc-400 focus:bg-zinc-900/60 transition-all duration-300 placeholder:text-zinc-600 resize-none"
-          />
-          <button
-            type="submit"
-            disabled={submissionState.status === 'submitting'}
-            className="bg-zinc-100 text-zinc-950 py-5 mt-2 text-[11px] tracking-[0.2em] uppercase hover:bg-zinc-300 transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {submissionState.status === 'submitting' ? 'Submitting...' : 'Submit Inquiry'}
-          </button>
-          {submissionState.message && (
-            <p className={`text-xs tracking-wide text-center mt-4 ${submissionState.status === 'error' ? 'text-red-400' : 'text-emerald-400'}`} role="status">
-              {submissionState.message}
-            </p>
-          )}
-        </form>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 px-6 border-t border-zinc-900 bg-zinc-950 text-center flex flex-col items-center">
-        <span className="text-xl font-light tracking-[0.3em] uppercase text-zinc-100 mb-6">Omnia</span>
-        <div className="flex space-x-8 mb-8 text-[10px] tracking-[0.2em] uppercase text-zinc-400">
-          <a href="#" className="hover:text-zinc-100 transition-colors">Instagram</a>
-          <a href="https://mail.google.com/mail/?view=cm&fs=1&to=muditsuthar@gmail.com" target="_blank" rel="noreferrer" className="hover:text-zinc-100 transition-colors">Email Us</a>
-        </div>
-        <p className="text-zinc-600 text-[10px] tracking-[0.2em] uppercase">© {new Date().getFullYear()} Mudit Suthar. All rights reserved.</p>
-      </footer>
-    </div>
+      <section id="inquire" className="inquiry section-pad"><div className="inquiry-top"><div className="section-meta reveal" data-reveal><span>( Begin a conversation )</span><span>2026</span></div><h2 className="display-title reveal" data-reveal>Let’s make<br /><em>something lasting.</em></h2></div><form className="inquiry-form reveal" data-reveal onSubmit={handleInquirySubmit}><label><span>Your name / studio</span><input type="text" autoComplete="name" value={inquiry.fullName} onChange={(event) => setInquiry({ ...inquiry, fullName: event.target.value })} placeholder="Name or practice" required /></label><div className="form-field-grid"><label className="form-small"><span>Email address</span><input type="email" autoComplete="email" value={inquiry.email} onChange={(event) => setInquiry({ ...inquiry, email: event.target.value })} placeholder="you@company.com" required /></label><label className="form-small"><span>Phone / WhatsApp</span><input type="tel" autoComplete="tel" value={inquiry.phone} onChange={(event) => setInquiry({ ...inquiry, phone: event.target.value })} placeholder="Your preferred number" required /></label></div><div className="form-field-grid"><label className="form-small"><span>Project type</span><select value={inquiry.projectType} onChange={(event) => setInquiry({ ...inquiry, projectType: event.target.value })}><option value="">Select a type</option><option>Private residence</option><option>Hospitality</option><option>Retail / commercial</option><option>Architect / interior designer</option><option>Other</option></select></label><label className="form-small"><span>Project location</span><input type="text" value={inquiry.location} onChange={(event) => setInquiry({ ...inquiry, location: event.target.value })} placeholder="City, state" /></label></div><div className="form-field-grid"><label className="form-small"><span>Indicative budget</span><select value={inquiry.budget} onChange={(event) => setInquiry({ ...inquiry, budget: event.target.value })}><option value="">Select a range</option><option>Under ₹10 lakh</option><option>₹10–25 lakh</option><option>₹25–50 lakh</option><option>₹50 lakh+</option><option>Prefer to discuss</option></select></label><label className="form-small"><span>Ideal timeline</span><input type="text" value={inquiry.timeline} onChange={(event) => setInquiry({ ...inquiry, timeline: event.target.value })} placeholder="e.g. September 2026" /></label></div><label><span>Tell us about the space</span><textarea value={inquiry.projectDetails} onChange={(event) => setInquiry({ ...inquiry, projectDetails: event.target.value })} placeholder="Scope, materials, reference, or anything important…" rows="2" required /></label><label className="form-honeypot" aria-hidden="true"><span>Website</span><input type="text" tabIndex="-1" autoComplete="off" value={inquiry.website} onChange={(event) => setInquiry({ ...inquiry, website: event.target.value })} /></label><div className="form-footer"><p>For general enquiries:<br /><a href="mailto:muditsuthar@gmail.com">muditsuthar@gmail.com</a></p><button type="submit" disabled={submissionState.status === 'submitting'}><span>{submissionState.status === 'submitting' ? 'Sending...' : 'Send enquiry'}</span><Arrow diagonal /></button></div>{submissionState.message && <p className={`form-message ${submissionState.status}`} role="status">{submissionState.message}</p>}</form></section>
+      <footer className="footer"><div className="footer-brand"><Mark /><span>Omnia</span></div><p>© {new Date().getFullYear()} Omnia Wood Atelier</p><a href="#top">Back to top <Arrow diagonal /></a></footer>
+    </main>
   );
 }
