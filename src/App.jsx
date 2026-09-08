@@ -98,7 +98,7 @@ export default function App() {
         <p className="hero-location reveal" data-reveal><span className="pulse-dot" /> India · Worldwide</p>
         <div className="hero-copy"><p className="eyebrow hero-kicker reveal" data-reveal>Architectural millwork · master carpentry</p><h1 className="hero-title"><span className="reveal-line" data-reveal>Built for the</span><em className="reveal-line" data-reveal>way you live.</em></h1><div className="hero-bottom reveal" data-reveal><p>Rare materials, resolved with discipline.<br />Made for spaces that outlast trends.</p><a href="#work" className="circular-link" aria-label="Explore selected works"><Arrow diagonal /></a></div></div>
         <div className="hero-side-note" aria-hidden="true"><span>Scroll to explore</span><i /></div><div className="hero-index" aria-hidden="true">( 01 — 05 )</div>
-      </section>
+      </section> 
 
       <section className="ticker" aria-label="Our specialties"><div className="ticker-track"><span>Bespoke cabinetry <b>✦</b> Architectural interiors <b>✦</b> Hand-finished timber <b>✦</b> Bespoke cabinetry <b>✦</b> Architectural interiors <b>✦</b> Hand-finished timber <b>✦</b></span></div></section>
 
