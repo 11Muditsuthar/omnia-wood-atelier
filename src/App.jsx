@@ -16,7 +16,7 @@ const process = [
 
 function Arrow({ diagonal = false }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true" className={diagonal ? 'icon icon--diagonal' : 'icon'}><path d="M4 12h15M14 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.25" /></svg>;
-}
+} 
 
 function Mark() {
   return <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>;
