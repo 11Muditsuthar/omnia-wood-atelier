@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 const projects = [
@@ -20,6 +20,72 @@ function Arrow({ diagonal = false }) {
 
 function Mark() {
   return <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>;
+}
+
+function CustomCursor() {
+  const cursorRef = useRef(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let cursorX = mouseX;
+    let cursorY = mouseY;
+
+    const onMouseMove = (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (!isVisible) setIsVisible(true);
+    };
+
+    const render = () => {
+      cursorX += (mouseX - cursorX) * 0.2;
+      cursorY += (mouseY - cursorY) * 0.2;
+      
+      cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0)`;
+      requestAnimationFrame(render);
+    };
+
+    const handleMouseOver = (e) => {
+      if (e.target.closest('a, button, input, textarea, select, .circular-link')) {
+        setIsHovering(true);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
+    const handleMouseLeave = () => setIsVisible(false);
+    const handleMouseEnter = () => setIsVisible(true);
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseover', handleMouseOver);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mouseenter', handleMouseEnter);
+    
+    requestAnimationFrame(render);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseover', handleMouseOver);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+    };
+  }, [isVisible]);
+
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  if (isTouchDevice) return null;
+
+  return (
+    <div
+      ref={cursorRef}
+      className={`custom-cursor ${isHovering ? 'is-hovering' : ''} ${isVisible ? 'is-visible' : ''}`}
+      aria-hidden="true"
+    />
+  );
 }
 
 export default function App() {
@@ -79,10 +145,12 @@ export default function App() {
     inquiryStartedAt.current = Date.now();
     setSubmissionState({ status: 'success', message: 'Thank you — your enquiry has been sent. We’ll be in touch shortly.' });
   };
+  
   const closeMenu = () => setMenuOpen(false);
 
   return (
     <main ref={appRef} className="site-shell">
+      <CustomCursor />
       <div className="film-grain" aria-hidden="true" />
       <header className="site-header">
         <a href="#top" className="brand" onClick={closeMenu} aria-label="Omnia Wood Atelier home"><Mark /><span className="brand-name">Omnia</span><span className="brand-subtitle">Wood Atelier</span></a>

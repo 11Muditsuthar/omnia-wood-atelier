@@ -3,10 +3,72 @@
 :root { --ink: #131311; --paper: #e8e4dc; --muted: #8e8b84; --line: rgba(232, 228, 220, .16); --umber: #b86f42; --pointer-x: 50%; --pointer-y: 50%; }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; background: var(--ink); }
-body { margin: 0; min-width: 320px; background: var(--ink); color: var(--paper); font-family: 'DM Sans', Arial, sans-serif; cursor: url("data:image/svg+xml,%3Csvg width='28' height='28' viewBox='0 0 28 28' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='14' cy='14' r='5' fill='%23ca8b63' stroke='rgba(255,255,255,0.7)' stroke-width='1.5'/%3E%3C/svg%3E") 14 14, auto; }
+body { margin: 0; min-width: 320px; background: var(--ink); color: var(--paper); font-family: 'DM Sans', Arial, sans-serif; }
 button, input, textarea { font: inherit; }
-a { color: inherit; text-decoration: none; cursor: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='16' fill='rgba(202,139,99,0.25)' stroke='%23ca8b63' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%23ca8b63'/%3E%3C/svg%3E") 20 20, pointer; }
-button, select, .circular-link { cursor: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='20' cy='20' r='16' fill='rgba(202,139,99,0.25)' stroke='%23ca8b63' stroke-width='2'/%3E%3Ccircle cx='20' cy='20' r='5' fill='%23ca8b63'/%3E%3C/svg%3E") 20 20, pointer; }
+a { color: inherit; text-decoration: none; }
+button, select, .circular-link { outline: none; }
+
+@media (pointer: fine) {
+  body, a, button, input, textarea, select, .circular-link {
+    cursor: none !important;
+  }
+}
+
+/* --- Animated Custom Cursor --- */
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  background: #ca8b63;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0; /* Hidden when off-screen */
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              margin 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              background-color 0.3s ease, 
+              opacity 0.3s ease;
+}
+
+.custom-cursor.is-visible {
+  opacity: 1;
+}
+
+/* The thin white outer ring */
+.custom-cursor::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              height 0.3s cubic-bezier(0.16, 1, 0.3, 1), 
+              border-color 0.3s ease;
+}
+
+.custom-cursor.is-hovering {
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  background-color: rgba(202, 139, 99, 0.12);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.custom-cursor.is-hovering::after {
+  width: 44px;
+  height: 44px;
+  border-color: rgba(202, 139, 99, 0.8);
+}
+
 .site-shell { overflow: clip; position: relative; }
 .film-grain { pointer-events: none; position: fixed; z-index: 100; inset: 0; opacity: .14; mix-blend-mode: soft-light; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E"); }
 
