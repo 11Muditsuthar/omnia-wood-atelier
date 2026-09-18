@@ -22,10 +22,110 @@ function Mark() {
   return <span className="brand-mark" aria-hidden="true"><i /><i /><i /></span>;
 }
 
+function TimberModel() {
+  const stageRef = useRef(null);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+
+    const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+    let frame = 0;
+    let isPointerOver = false;
+
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+    const paintScrollPosition = () => {
+      frame = 0;
+      const bounds = stage.getBoundingClientRect();
+      if (bounds.bottom < 0 || bounds.top > window.innerHeight) return;
+
+      const distanceFromCenter = (window.innerHeight * 0.52) - (bounds.top + bounds.height / 2);
+      const progress = clamp(distanceFromCenter / (window.innerHeight + bounds.height), -0.5, 0.5);
+      stage.style.setProperty('--model-scroll-shift', `${Math.round(progress * 68)}px`);
+      stage.style.setProperty('--model-scroll-roll', `${(progress * 6).toFixed(2)}deg`);
+    };
+    const requestPaint = () => {
+      if (!frame) frame = requestAnimationFrame(paintScrollPosition);
+    };
+    const resetPointer = () => {
+      isPointerOver = false;
+      stage.classList.remove('is-exploring');
+      stage.style.setProperty('--model-tilt-x', '0deg');
+      stage.style.setProperty('--model-tilt-y', '0deg');
+      stage.style.setProperty('--model-light-x', '50%');
+      stage.style.setProperty('--model-light-y', '42%');
+    };
+    const onPointerMove = (event) => {
+      if (!finePointer.matches) return;
+      const bounds = stage.getBoundingClientRect();
+      const x = clamp((event.clientX - bounds.left) / bounds.width, 0, 1) - 0.5;
+      const y = clamp((event.clientY - bounds.top) / bounds.height, 0, 1) - 0.5;
+      isPointerOver = true;
+      stage.classList.add('is-exploring');
+      stage.style.setProperty('--model-tilt-x', `${(x * 13).toFixed(2)}deg`);
+      stage.style.setProperty('--model-tilt-y', `${(-y * 9).toFixed(2)}deg`);
+      stage.style.setProperty('--model-light-x', `${(x + 0.5) * 100}%`);
+      stage.style.setProperty('--model-light-y', `${(y + 0.5) * 100}%`);
+    };
+    const onPointerLeave = () => resetPointer();
+    const onPointerChange = () => {
+      if (!finePointer.matches && isPointerOver) resetPointer();
+    };
+
+    paintScrollPosition();
+    window.addEventListener('scroll', requestPaint, { passive: true });
+    window.addEventListener('resize', requestPaint);
+    stage.addEventListener('pointermove', onPointerMove);
+    stage.addEventListener('pointerleave', onPointerLeave);
+    finePointer.addEventListener('change', onPointerChange);
+
+    return () => {
+      window.removeEventListener('scroll', requestPaint);
+      window.removeEventListener('resize', requestPaint);
+      stage.removeEventListener('pointermove', onPointerMove);
+      stage.removeEventListener('pointerleave', onPointerLeave);
+      finePointer.removeEventListener('change', onPointerChange);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={stageRef}
+      className="model-stage"
+      data-model-interaction
+      role="img"
+      aria-label="Interactive walnut cabinet material study"
+    >
+      <div className="model-halo" aria-hidden="true" />
+      <div className="model-ground" aria-hidden="true" />
+      <div className="model-motion" aria-hidden="true">
+        <div className="timber-cabinet">
+          <div className="cabinet-face cabinet-face--front">
+            <span className="cabinet-panel cabinet-panel--one" />
+            <span className="cabinet-panel cabinet-panel--two" />
+            <span className="cabinet-join" />
+            <span className="cabinet-pull cabinet-pull--one" />
+            <span className="cabinet-pull cabinet-pull--two" />
+          </div>
+          <div className="cabinet-face cabinet-face--back" />
+          <div className="cabinet-face cabinet-face--right" />
+          <div className="cabinet-face cabinet-face--left" />
+          <div className="cabinet-face cabinet-face--top" />
+          <div className="cabinet-face cabinet-face--bottom" />
+        </div>
+      </div>
+      <span className="model-instruction" aria-hidden="true">Move to examine</span>
+    </div>
+  );
+}
+
 function CustomCursor() {
   const cursorRef = useRef(null);
   const [isHovering, setIsHovering] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isExploring, setIsExploring] = useState(false);
+  const visibleRef = useRef(false);
 
   useEffect(() => {
     const cursor = cursorRef.current;
@@ -36,10 +136,16 @@ function CustomCursor() {
     let cursorX = mouseX;
     let cursorY = mouseY;
 
+    let frame = 0;
+    const setCursorVisible = (visible) => {
+      if (visibleRef.current === visible) return;
+      visibleRef.current = visible;
+      setIsVisible(visible);
+    };
     const onMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      if (!isVisible) setIsVisible(true);
+      setCursorVisible(true);
     };
 
     const render = () => {
@@ -47,34 +153,40 @@ function CustomCursor() {
       cursorY += (mouseY - cursorY) * 0.2;
       
       cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0)`;
-      requestAnimationFrame(render);
+      frame = requestAnimationFrame(render);
     };
 
     const handleMouseOver = (e) => {
-      if (e.target.closest('a, button, input, textarea, select, .circular-link')) {
+      if (e.target.closest('[data-model-interaction]')) {
+        setIsExploring(true);
+        setIsHovering(false);
+      } else if (e.target.closest('a, button, input, textarea, select, .circular-link')) {
         setIsHovering(true);
+        setIsExploring(false);
       } else {
         setIsHovering(false);
+        setIsExploring(false);
       }
     };
 
-    const handleMouseLeave = () => setIsVisible(false);
-    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => setCursorVisible(false);
+    const handleMouseEnter = () => setCursorVisible(true);
 
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseover', handleMouseOver);
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
     
-    requestAnimationFrame(render);
+    frame = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseover', handleMouseOver);
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
+      cancelAnimationFrame(frame);
     };
-  }, [isVisible]);
+  }, []);
 
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   if (isTouchDevice) return null;
@@ -82,9 +194,9 @@ function CustomCursor() {
   return (
     <div
       ref={cursorRef}
-      className={`custom-cursor ${isHovering ? 'is-hovering' : ''} ${isVisible ? 'is-visible' : ''}`}
+      className={`custom-cursor ${isHovering ? 'is-hovering' : ''} ${isExploring ? 'is-exploring' : ''} ${isVisible ? 'is-visible' : ''}`}
       aria-hidden="true"
-    />
+    ><span>View</span></div>
   );
 }
 
@@ -172,7 +284,7 @@ export default function App() {
 
       <section className="intro section-pad" id="atelier">
         <div className="section-meta reveal" data-reveal><span>( About Omnia )</span><span>01 — 04</span></div>
-        <div className="intro-grid"><div className="intro-visual reveal" data-reveal><div className="wood-block" aria-hidden="true"><span /><span /><span /><span /></div><p>Material Study<br />No. 03 — Walnut</p></div><div className="intro-copy"><p className="eyebrow reveal" data-reveal>More than a finish</p><h2 className="display-title reveal" data-reveal>We give timber<br /><em>its rightful weight.</em></h2><div className="intro-text reveal" data-reveal><p>Omnia is a studio for spaces with a point of view. We make quietly distinctive millwork for private homes, hospitality, and commercial interiors.</p><a className="text-link" href="#process">Inside the atelier <Arrow /></a></div></div></div>
+        <div className="intro-grid"><div className="intro-visual reveal" data-reveal><TimberModel /><p>Material Study<br />No. 03 — Walnut</p></div><div className="intro-copy"><p className="eyebrow reveal" data-reveal>More than a finish</p><h2 className="display-title reveal" data-reveal>We give timber<br /><em>its rightful weight.</em></h2><div className="intro-text reveal" data-reveal><p>Omnia is a studio for spaces with a point of view. We make quietly distinctive millwork for private homes, hospitality, and commercial interiors.</p><a className="text-link" href="#process">Inside the atelier <Arrow /></a></div></div></div>
       </section>
 
       <section className="capabilities section-pad"><div className="section-meta reveal" data-reveal><span>( What we make )</span><span>02 — 04</span></div><div className="capability-list">{['Kitchens & cabinetry', 'Libraries & private studies', 'Doors & wall panelling', 'Hospitality & retail fit-outs'].map((item, index) => <div className="capability-row reveal" data-reveal key={item}><span>0{index + 1}</span><h3>{item}</h3><a href="#inquire" aria-label={`Enquire about ${item}`}><Arrow diagonal /></a></div>)}</div></section>
