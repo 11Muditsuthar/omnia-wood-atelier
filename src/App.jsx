@@ -196,7 +196,7 @@ function CustomCursor() {
       ref={cursorRef}
       className={`custom-cursor ${isHovering ? 'is-hovering' : ''} ${isExploring ? 'is-exploring' : ''} ${isVisible ? 'is-visible' : ''}`}
       aria-hidden="true"
-    ><span>View</span></div>
+    />
   );
 }
 
